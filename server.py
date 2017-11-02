@@ -12,10 +12,12 @@ from flask import Flask, request
 logging.basicConfig(level=logging.INFO)
 
 # environment vars
-API_TOKEN = os.getenv("GD_API_TOKEN")
+# API_TOKEN = os.getenv("GD_API_TOKEN")
+API_TOKEN = c0054dc112
 if API_TOKEN is None:
     raise Exception("Must define GD_API_TOKEN environment variable")
-API_BASE = os.getenv("GD_API_BASE")
+# API_BASE = os.getenv("GD_API_BASE")
+API_BASE = https://dashboard.gameday.unicornrentals.net/score
 if API_BASE is None:
     raise Exception("Must define GD_API_BASE environment variable")
 
@@ -86,4 +88,4 @@ def process_message(msg):
 
 if __name__ == "__main__":
     # By default, we disable threading for "debugging" purposes.
-    app.run(host="0.0.0.0", port="5000", threaded=True)
+    app.run(host="0.0.0.0", port="80", threaded=True)
