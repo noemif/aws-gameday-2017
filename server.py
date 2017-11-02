@@ -8,6 +8,8 @@ import argparse
 import urllib2
 from flask import Flask, request
 
+import boto3
+
 # configure logging
 logging.basicConfig(level=logging.INFO)
 
@@ -21,6 +23,9 @@ if API_BASE is None:
 
 # defining global vars
 MESSAGES = {} # A dictionary that contains message parts
+
+DDB = boto3.resource('dynamodb')
+DDB_TABLE = dynamodb.Table('onfire-msg')
 
 app = Flask(__name__)
 
@@ -55,13 +60,18 @@ def process_message(msg):
 
     # Try to get the parts of the message from the MESSAGES dictionary.
     # If it's not there, create one that has None in both parts
-    parts = MESSAGES.get(msg_id, [None, None])
+    ## XXX: in mem: parts = MESSAGES.get(msg_id, [None, None])
+    parts = [None, None]
+    response = DDB_TABLE.get_item(Key={'id': msg_id,})
+    if 'Item' in response:
+        parts = response['parts']
 
     # store this part of the message in the correct part of the list
     parts[part_number] = data
 
     # store the parts in MESSAGES
-    MESSAGES[msg_id] = parts
+    ## XXX: in mem: MESSAGES[msg_id] = parts
+    DDB_TABLE.put_item(Item={'id': msg_id, 'parts': parts})
 
     # if both parts are filled, the message is complete
     if None not in parts:
