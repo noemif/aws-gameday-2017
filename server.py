@@ -1,35 +1,31 @@
 #!/usr/bin/env python
 """
-Client which receives the requests
-
-Args:
-    API Token
-    API Base (https://...)
-
+Client which receives and processes the requests
 """
-from flask import Flask, request
+import os
 import logging
 import argparse
 import urllib2
+from flask import Flask, request
 
-# logging.basicConfig(level=logging.DEBUG)
+# configure logging
+logging.basicConfig(level=logging.INFO)
 
-# parsing arguments
-PARSER = argparse.ArgumentParser(description='Client message processor')
-PARSER.add_argument('API_token', help="the individual API token given to your team")
-PARSER.add_argument('API_base', help="the base URL for the game API")
-
-ARGS = PARSER.parse_args()
+# environment vars
+API_TOKEN = os.getenv("GD_API_TOKEN")
+if API_TOKEN is None:
+    raise Exception("Must define GD_API_TOKEN environment variable")
+API_BASE = os.getenv("GD_API_BASE")
+if API_BASE is None:
+    raise Exception("Must define GD_API_BASE environment variable")
 
 # defining global vars
 MESSAGES = {} # A dictionary that contains message parts
-API_BASE = ARGS.API_base
-# 'https://csm45mnow5.execute-api.us-west-2.amazonaws.com/dev'
 
-APP = Flask(__name__)
+app = Flask(__name__)
 
 # creating flask route for type argument
-@APP.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def main_handler():
     """
     main routing for requests
@@ -44,15 +40,18 @@ def get_message_stats():
     provides a status that players can check
     """
     msg_count = len(MESSAGES.keys())
-    return "There are %d messages in the MESSAGES dictionary" % msg_count
+    return "There are {} messages in the MESSAGES dictionary".format(msg_count)
 
 def process_message(msg):
     """
-    processes the messages by combining and appending the kind code
+    processes the messages by combining parts
     """
     msg_id = msg['Id'] # The unique ID for this message
     part_number = msg['PartNumber'] # Which part of the message it is
     data = msg['Data'] # The data of the message
+
+    # log
+    logging.info("Processing message for msg_id={} with part_number={} and data={}".format(msg_id, part_number, data))
 
     # Try to get the parts of the message from the MESSAGES dictionary.
     # If it's not there, create one that has None in both parts
@@ -67,32 +66,24 @@ def process_message(msg):
     # if both parts are filled, the message is complete
     if None not in parts:
         # app.logger.debug("got a complete message for %s" % msg_id)
-        print "have both parts"
+        logging.info("Have both parts for msg_id={}".format(msg_id))
         # We can build the final message.
         result = parts[0] + parts[1]
+        logging.debug("Assembled message: {}".format(result))
         # sending the response to the score calculator
         # format:
         #   url -> api_base/jFgwN4GvTB1D2QiQsQ8GHwQUbbIJBS6r7ko9RVthXCJqAiobMsLRmsuwZRQTlOEW
         #   headers -> x-gameday-token = API_token
         #   data -> EaXA2G8cVTj1LGuRgv8ZhaGMLpJN2IKBwC5eYzAPNlJwkN4Qu1DIaI3H1zyUdf1H5NITR
-        APP.logger.debug("ID: %s" % msg_id)
-        APP.logger.debug("RESULT: %s" % result)
         url = API_BASE + '/' + msg_id
-        print url
-        print result
-        req = urllib2.Request(url, data=result, headers={'x-gameday-token':ARGS.API_token})
+        logging.debug("Making request to {} with payload {}".format(url, result))
+        req = urllib2.Request(url, data=result, headers={'x-gameday-token':API_TOKEN})
         resp = urllib2.urlopen(req)
+        logging.debug("Response from server: {}".format(resp.read()))
         resp.close()
-        print response
 
     return 'OK'
 
 if __name__ == "__main__":
-
     # By default, we disable threading for "debugging" purposes.
-    # This will cause the app to block requests, which means that you miss out on some points,
-    # and fail ALB healthchecks, but whatever I know I'm getting fired on Friday.
-    APP.run(host="0.0.0.0", port="80")
-    
-    # Use this to enable threading:
-    # APP.run(host="0.0.0.0", port="80", threaded=True)
+    app.run(host="0.0.0.0", port="5000", threaded=True)
