@@ -11,7 +11,7 @@ from flask import Flask, request
 import boto3
 
 # configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(filename='/var/log/unicorn.log',level=logging.DEBUG)
 
 # environment vars
 # API_TOKEN = os.getenv("GD_API_TOKEN")
