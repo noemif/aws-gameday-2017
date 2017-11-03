@@ -52,7 +52,7 @@ def get_message_stats():
 
 def sqs_loop():
     # Create SQS client
-    sqs = boto3.client('sqs')
+    sqs = boto3.client('sqs', region_name='us-west-2')
     queue_url = 'https://sqs.us-west-2.amazonaws.com/415062575128/unicorns-sqs'
 
     while True:
