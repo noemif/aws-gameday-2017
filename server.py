@@ -66,6 +66,9 @@ def process_message(msg):
     parts = [None, None]
     response = DDB_TABLE.get_item(Key={'id': msg_id,})
     if 'Item' in response:
+        if 'completed' in response['Item']:
+            # Message already completed, skip!!
+            return 'OK'
         parts = response['Item']['parts']
 
     # store this part of the message in the correct part of the list
@@ -93,6 +96,8 @@ def process_message(msg):
         resp = urllib2.urlopen(req)
         logging.debug("Response from server: {}".format(resp.read()))
         resp.close()
+        # Mark as sent in Dynamo
+        DDB_TABLE.put_item(Item={'id': msg_id, 'parts': parts, 'completed': True})
 
     return 'OK'
 
