@@ -6,6 +6,7 @@ import os
 import logging
 import argparse
 import urllib2
+import time
 from flask import Flask, request
 
 import boto3
@@ -126,14 +127,21 @@ def kinesis_loop():
     shard_iterator = shard_iterator_response['ShardIterator']
     while True:
         logging.info("Getting messages from kinesis stream...")
-        response = kinesis.get_records(
-            ShardIterator=shard_iterator,
-            Limit=10
-        )
+        try:
+            response = kinesis.get_records(
+                ShardIterator=shard_iterator,
+                Limit=10
+            )
+        except:
+            #back off
+            time.sleep(12)
+
         shard_iterator = response['NextShardIterator']
         # process records
         for record in response['Records']:
             process_message(json.loads(record['Data']))
+
+        time.sleep(4)
 
 def process_message(msg):
     """
