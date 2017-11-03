@@ -55,6 +55,7 @@ def process_message(msg):
     """
     msg_id = msg['Id'] # The unique ID for this message
     part_number = msg['PartNumber'] # Which part of the message it is
+    total_parts = msg['TotalParts'] # How many parts we have in total
     data = msg['Data'] # The data of the message
 
     # log
@@ -63,7 +64,7 @@ def process_message(msg):
     # Try to get the parts of the message from the MESSAGES dictionary.
     # If it's not there, create one that has None in both parts
     ## XXX: in mem: parts = MESSAGES.get(msg_id, [None, None])
-    parts = [None, None]
+    parts = [None] * total_parts # Initialise array of length "total_parts"
     response = DDB_TABLE.get_item(Key={'id': msg_id,})
     if 'Item' in response:
         if 'completed' in response['Item']:
@@ -83,7 +84,7 @@ def process_message(msg):
         # app.logger.debug("got a complete message for %s" % msg_id)
         logging.info("Have both parts for msg_id={}".format(msg_id))
         # We can build the final message.
-        result = parts[0] + parts[1]
+        result = ''.join(parts)
         logging.debug("Assembled message: {}".format(result))
         # sending the response to the score calculator
         # format:
