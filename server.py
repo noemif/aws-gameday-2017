@@ -108,6 +108,32 @@ def sqs_loop():
                 except:
                     pass
 
+def kinesis_loop():
+    kinesis = boto3.client('kinesis', region_name='us-west-2')
+
+    stream = 'awsgamedayonfire'
+
+    describe = kinesis.describe_stream(
+        StreamName=stream,
+        Limit=1
+    )
+    shard = describe['StreamDescription']['Shards'][0]
+    shard_iterator_response = kinesis.get_shard_iterator(
+        ShardId=shard['ShardId'],
+        StreamName=stream,
+        ShardIteratorType='TRIM_HORIZON'
+    )
+    while True:
+        logging.info("Getting messages from kinesis stream...")
+        response = kinesis.get_records(
+            ShardIterator=shard_iterator,
+            Limit=10
+        )
+        shard_iterator = response['NextShardIterator']
+        # process records
+        for record in response['Records']:
+            process_message(json.loads(record['Data']))
+
 def process_message(msg):
     """
     processes the messages by combining parts
@@ -163,7 +189,7 @@ def process_message(msg):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=['http','sqs','s3'])
+    parser.add_argument("mode", choices=['http','sqs','s3','kinesis'])
     args = parser.parse_args()
     if args.mode == 'http':
         # By default, we disable threading for "debugging" purposes.
@@ -175,3 +201,6 @@ if __name__ == "__main__":
     if args.mode == 's3':
         logging.basicConfig(filename='/var/log/unicorn_s3.log',level=logging.INFO)
         s3_loop()
+    if args.mode == 'kinesis':
+        logging.basicConfig(filename='/var/log/unicorn_s3.log',level=logging.INFO)
+        kinesis_loop()
