@@ -203,5 +203,5 @@ if __name__ == "__main__":
         logging.basicConfig(filename='/var/log/unicorn_s3.log',level=logging.INFO)
         s3_loop()
     if args.mode == 'kinesis':
-        logging.basicConfig(filename='/var/log/unicorn_s3.log',level=logging.INFO)
+        logging.basicConfig(filename='/var/log/unicorn_kinesis.log',level=logging.INFO)
         kinesis_loop()
