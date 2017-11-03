@@ -131,7 +131,7 @@ def process_message(msg):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.argument("mode", choices=['http','sqs'])
+    parser.add_argument("mode", choices=['http','sqs'])
     args = parser.parse_args()
     if args.mode == 'http':
         # By default, we disable threading for "debugging" purposes.
