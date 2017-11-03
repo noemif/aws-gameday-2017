@@ -27,7 +27,7 @@ if API_BASE is None:
 MESSAGES = {} # A dictionary that contains message parts
 
 DDB = boto3.resource('dynamodb')
-DDB_TABLE = dynamodb.Table('onfire-msg')
+DDB_TABLE = DDB.Table('onfire-msg')
 
 app = Flask(__name__)
 
