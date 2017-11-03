@@ -9,6 +9,7 @@ import urllib2
 from flask import Flask, request
 
 import boto3
+import json
 
 # configure logging
 logging.basicConfig(filename='/var/log/unicorn.log',level=logging.INFO)
@@ -48,6 +49,32 @@ def get_message_stats():
     """
     msg_count = len(MESSAGES.keys())
     return "There are {} messages in the MESSAGES dictionary".format(msg_count)
+
+def sqs_loop:
+    # Create SQS client
+    sqs = boto3.client('sqs')
+    queue_url = 'https://sqs.us-west-2.amazonaws.com/415062575128/unicorns-sqs'
+
+    while True:
+
+        # Receive message from SQS queue
+        response = sqs.receive_message(
+            QueueUrl=queue_url,
+            MaxNumberOfMessages=10,
+        )
+
+        if 'Messages' in response:
+            logging.info('Got %d messages from SQS', len(response['Messages']))
+            # Loop through messages to process them
+            for message in response['Messages']:
+                receipt_handle = message['ReceiptHandle']
+                body = message['Body']
+                if process_message(json.loads(body)) == 'OK':
+                    sqs.delete_message(
+                        QueueUrl=queue_url,
+                        ReceiptHandle=receipt_handle
+                    )
+                    logging.info('Deleted message %s', receipt_handle)
 
 def process_message(msg):
     """
