@@ -47,6 +47,38 @@ def get_message_stats():
     msg_count = len(MESSAGES.keys())
     return "There are {} messages in the MESSAGES dictionary".format(msg_count)
 
+def s3_loop():
+    # Create boto clients
+    s3 = boto3.resource('s3', region_name='us-west-2')
+    sqs = boto3.client('sqs', region_name='us-west-2')
+    queue_url = 'https://sqs.us-west-2.amazonaws.com/415062575128/unicorns-sqs-for-s3'
+
+    while True:
+        # Receive message from SQS queue
+        response = sqs.receive_message(
+            QueueUrl=queue_url,
+            MaxNumberOfMessages=10,
+            WaitTimeSeconds=10,
+        )
+
+        if 'Messages' in response:
+            logging.info('Got %d messages from SQS for S3', len(response['Messages']))
+            for message in response['Messages']:
+                receipt_handle = message['ReceiptHandle']
+                body = json.loads(message['Body'])
+
+                for record in body.get("Records") or []:
+                    s3obj = s3.Object(record['s3']['bucket']['name'], record['s3']['object']['key'])
+                    file_contents = s3obj.get()["Body"].read()
+                    if process_message(json.loads(file_contents)) == 'OK':
+                        s3obj.delete()
+                        logging.info('Deleted object')
+                        sqs.delete_message(
+                            QueueUrl=queue_url,
+                            ReceiptHandle=receipt_handle
+                        )
+                        logging.info('Deleted message')
+
 def sqs_loop():
     # Create SQS client
     sqs = boto3.client('sqs', region_name='us-west-2')
@@ -140,3 +172,6 @@ if __name__ == "__main__":
     if args.mode == 'sqs':
         logging.basicConfig(filename='/var/log/unicorn_sqs.log',level=logging.INFO)
         sqs_loop()
+    if args.mode == 's3':
+        logging.basicConfig(filename='/var/log/unicorn_s3.log',level=logging.INFO)
+        s3_loop()
