@@ -66,7 +66,7 @@ def process_message(msg):
     parts = [None, None]
     response = DDB_TABLE.get_item(Key={'id': msg_id,})
     if 'Item' in response:
-        parts = response['parts']
+        parts = response['Item']['parts']
 
     # store this part of the message in the correct part of the list
     parts[part_number] = data
