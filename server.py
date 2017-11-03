@@ -15,18 +15,18 @@ logging.basicConfig(level=logging.INFO)
 
 # environment vars
 # API_TOKEN = os.getenv("GD_API_TOKEN")
-API_TOKEN = c0054dc112
+API_TOKEN = 'c0054dc112'
 if API_TOKEN is None:
     raise Exception("Must define GD_API_TOKEN environment variable")
 # API_BASE = os.getenv("GD_API_BASE")
-API_BASE = https://dashboard.gameday.unicornrentals.net/score
+API_BASE = 'https://dashboard.gameday.unicornrentals.net/score'
 if API_BASE is None:
     raise Exception("Must define GD_API_BASE environment variable")
 
 # defining global vars
 MESSAGES = {} # A dictionary that contains message parts
 
-DDB = boto3.resource('dynamodb')
+DDB = boto3.resource('dynamodb', region_name='us-west-2')
 DDB_TABLE = DDB.Table('onfire-msg')
 
 app = Flask(__name__)
