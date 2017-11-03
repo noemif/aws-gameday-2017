@@ -11,9 +11,6 @@ from flask import Flask, request
 import boto3
 import json
 
-# configure logging
-logging.basicConfig(filename='/var/log/unicorn.log',level=logging.INFO)
-
 # environment vars
 # API_TOKEN = os.getenv("GD_API_TOKEN")
 API_TOKEN = 'c0054dc112'
@@ -135,6 +132,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.mode == 'http':
         # By default, we disable threading for "debugging" purposes.
+        logging.basicConfig(filename='/var/log/unicorn_http.log',level=logging.INFO)
         app.run(host="0.0.0.0", port="80", threaded=True)
     if args.mode == 'sqs':
+        logging.basicConfig(filename='/var/log/unicorn_sqs.log',level=logging.INFO)
         sqs_loop()
