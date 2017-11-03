@@ -121,7 +121,7 @@ def kinesis_loop():
     shard_iterator_response = kinesis.get_shard_iterator(
         ShardId=shard['ShardId'],
         StreamName=stream,
-        ShardIteratorType='TRIM_HORIZON'
+        ShardIteratorType='LATEST'
     )
     shard_iterator = shard_iterator_response['ShardIterator']
     while True:
