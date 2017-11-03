@@ -72,9 +72,9 @@ def sqs_loop():
                             QueueUrl=queue_url,
                             ReceiptHandle=receipt_handle
                         )
-                        logging.info('Deleted message %s', receipt_handle)
-                except Exception as e:
-                    logging.info("error({0}): {1}".format(e.errno, e.strerror))
+                        logging.info('Deleted message')
+                except:
+                    pass
 
 def process_message(msg):
     """
@@ -113,6 +113,8 @@ def process_message(msg):
         # We can build the final message.
         result = ''.join(parts)
         logging.debug("Assembled message: {}".format(result))
+        # Mark as sent in Dynamo
+        DDB_TABLE.put_item(Item={'id': msg_id, 'parts': parts, 'completed': True})
         # sending the response to the score calculator
         # format:
         #   url -> api_base/jFgwN4GvTB1D2QiQsQ8GHwQUbbIJBS6r7ko9RVthXCJqAiobMsLRmsuwZRQTlOEW
@@ -124,8 +126,6 @@ def process_message(msg):
         resp = urllib2.urlopen(req)
         logging.debug("Response from server: {}".format(resp.read()))
         resp.close()
-        # Mark as sent in Dynamo
-        DDB_TABLE.put_item(Item={'id': msg_id, 'parts': parts, 'completed': True})
 
     return 'OK'
 
