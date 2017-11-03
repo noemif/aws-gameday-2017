@@ -123,6 +123,7 @@ def kinesis_loop():
         StreamName=stream,
         ShardIteratorType='TRIM_HORIZON'
     )
+    shard_iterator = shard_iterator_response['ShardIterator']
     while True:
         logging.info("Getting messages from kinesis stream...")
         response = kinesis.get_records(
