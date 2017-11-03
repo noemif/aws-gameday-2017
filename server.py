@@ -53,11 +53,11 @@ def sqs_loop():
     queue_url = 'https://sqs.us-west-2.amazonaws.com/415062575128/unicorns-sqs'
 
     while True:
-
         # Receive message from SQS queue
         response = sqs.receive_message(
             QueueUrl=queue_url,
             MaxNumberOfMessages=10,
+            WaitTimeSeconds=10,
         )
 
         if 'Messages' in response:
@@ -66,12 +66,15 @@ def sqs_loop():
             for message in response['Messages']:
                 receipt_handle = message['ReceiptHandle']
                 body = message['Body']
-                if process_message(json.loads(body)) == 'OK':
-                    sqs.delete_message(
-                        QueueUrl=queue_url,
-                        ReceiptHandle=receipt_handle
-                    )
-                    logging.info('Deleted message %s', receipt_handle)
+                try:
+                    if process_message(json.loads(body)) == 'OK':
+                        sqs.delete_message(
+                            QueueUrl=queue_url,
+                            ReceiptHandle=receipt_handle
+                        )
+                        logging.info('Deleted message %s', receipt_handle)
+                except Exception as e:
+                    logging.info("error({0}): {1}".format(e.errno, e.strerror))
 
 def process_message(msg):
     """
