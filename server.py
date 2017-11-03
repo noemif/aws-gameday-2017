@@ -50,7 +50,7 @@ def get_message_stats():
     msg_count = len(MESSAGES.keys())
     return "There are {} messages in the MESSAGES dictionary".format(msg_count)
 
-def sqs_loop:
+def sqs_loop():
     # Create SQS client
     sqs = boto3.client('sqs')
     queue_url = 'https://sqs.us-west-2.amazonaws.com/415062575128/unicorns-sqs'
@@ -130,5 +130,11 @@ def process_message(msg):
     return 'OK'
 
 if __name__ == "__main__":
-    # By default, we disable threading for "debugging" purposes.
-    app.run(host="0.0.0.0", port="80", threaded=True)
+    parser = argparse.ArgumentParser()
+    parser.argument("mode", choices=['http','sqs'])
+    args = parser.parse_args()
+    if args.mode == 'http':
+        # By default, we disable threading for "debugging" purposes.
+        app.run(host="0.0.0.0", port="80", threaded=True)
+    if args.mode == 'sqs':
+        sqs_loop()
